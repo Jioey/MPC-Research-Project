@@ -2,10 +2,9 @@ import networkx as nx
 import numpy as np
 from plot import Plotter
 
-def worker_main(G:nx.Graph, rounds:int):
+def worker_main(originalG:nx.Graph, G:nx.Graph, rounds:int):
     matchings = []
-    # threshold = G.number_of_nodes() / 2.0
-    threshold = 150 # temp tp test main
+    threshold = G.number_of_nodes() / 2.0
 
     # while G is not empty
     while(rounds > 0 and G.number_of_nodes() > 0):
@@ -13,7 +12,7 @@ def worker_main(G:nx.Graph, rounds:int):
         # for all nodes in G
         for node in G.nodes():
             # if degree(node) > threshold
-            print("Node", node, "with degree", G.degree(node), "at threshold", threshold)
+            # print("Node", node, "with degree", G.degree(node), "at threshold", threshold)
             if G.degree(node) > threshold:
                 # add to matching (randomly assign)
                 # print("Matching nodes...")
@@ -22,12 +21,13 @@ def worker_main(G:nx.Graph, rounds:int):
                         print("No matches found")
                         break
                     
-                    randNeighbor = np.random.choice(G[node]) # pick random neighbor to match
+                    randNeighbor = int(np.random.choice(G[node])) # pick random neighbor to match
+                    # print("Node", node, "with rand neighbor", randNeighbor)
 
                     if randNeighbor not in toRemove: # if valid matching
                         # add to match and prepare to remove
                         print("Match found")
-                        matchings.append((node, int(randNeighbor)))
+                        matchings.append((node, randNeighbor))
                         toRemove.append(node)
                         toRemove.append(randNeighbor)
                         break
@@ -35,11 +35,16 @@ def worker_main(G:nx.Graph, rounds:int):
                         G.remove_edge(node, randNeighbor)
 
         # remove node and matched neighbor from graph
-        print("Removing nodes...")
+        # print("Removing nodes...")
         G.remove_nodes_from(toRemove)
-        rounds -= 1
+        originalG.remove_nodes_from(toRemove)
         
-    return G
+        print("Round", rounds, ", Matching", matchings)
+
+        rounds -= 1
+        threshold = threshold / 2
+        
+    return originalG, G
 
 if __name__ == "__main__":
     plotter = Plotter()
