@@ -6,3 +6,7 @@ depricate*
 
 # Output files
 *.txt
+
+# Added by cargo
+
+/target
