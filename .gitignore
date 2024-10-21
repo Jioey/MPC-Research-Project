@@ -12,4 +12,4 @@ depricate*
 /target
 
 # Added my me
-src/misc/playground.rs
+src/playground/*
