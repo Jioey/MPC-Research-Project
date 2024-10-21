@@ -10,3 +10,6 @@ depricate*
 # Added by cargo
 
 /target
+
+# Added my me
+src/misc/playground.rs
