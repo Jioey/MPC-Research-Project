@@ -1,33 +1,6 @@
 use plotly::{common::Title, layout::{Axis, BarMode}, Bar, Layout, Plot};
 use rand::Rng;
-// use std::{cmp::Ordering, collections::BinaryHeap};
 use std::time::Instant;
-
-// Defining heap_node struct -- NOTE: I dont think I need this?
-// struct HeapNode {
-//     degree: usize,
-//     node: usize,
-// }
-
-// impl Ord for HeapNode {
-//     fn cmp(&self, other: &Self) -> Ordering {
-//         (self.degree).cmp(&other.degree)
-//     }
-// }
-
-// impl PartialOrd for HeapNode {
-//     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-//         Some(self.cmp(other))
-//     }
-// }
-
-// impl PartialEq for HeapNode {
-//     fn eq(&self, other: &Self) -> bool {
-//         (&self.node) == (&other.node)
-//     }
-// }
-
-// impl Eq for HeapNode { }
 
 // Rust is Data Oriented?! (Contrary to OOP)
 const N:usize = 100; // Number of partitions
@@ -55,8 +28,6 @@ fn worker(part:Vec<usize>, worker_id:usize) -> Vec<usize>{
 
     let mut to_remove:Vec<usize> = Vec::new(); // List of nodes to remove
     let mut graph:Vec<Vec<usize>> = Vec::new();
-    // let mut degrees:Vec<usize> = Vec::new();
-    // let mut degrees_heap: BinaryHeap<HeapNode> = BinaryHeap::new(); // 
 
     // Create adj list  
     for v1 in part.iter() {
@@ -69,8 +40,6 @@ fn worker(part:Vec<usize>, worker_id:usize) -> Vec<usize>{
             }
         }
         graph.push(node_list);
-        // degrees.push(degree);
-        // degrees_heap.push(HeapNode{node:*v1, degree:degree});
     }
 
     print!("Graph:");
