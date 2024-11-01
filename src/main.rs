@@ -33,6 +33,7 @@ use std::time::Instant;
 const N:usize = 100; // Number of partitions
 const N_V:usize = N * N; // Number of Verticies
 const SEED:&str = "seed"; // Seed used in md5 hashing
+const FILE_NAME:&str = "graphs/renyi-10k-5.html";
 
 fn has_edge(v1:usize, v2:usize) -> bool {
     // The input string you want to hash
@@ -46,7 +47,7 @@ fn has_edge(v1:usize, v2:usize) -> bool {
     
     // Print the integer
     // println!("MD5 hash as integer: {}", hash_as_int);
-    return hash_as_int % 2 == 0;
+    return hash_as_int % 5 == 0;
 }
 
 fn worker(part:Vec<usize>, worker_id:usize) -> Vec<usize>{
@@ -85,7 +86,7 @@ fn worker(part:Vec<usize>, worker_id:usize) -> Vec<usize>{
     // Find matchings
     for i in 0..graph.len() {
         for neighbor in &graph[i] {
-            // Have to do lengthy .contains() because we cannot remove node half way through iterating the list
+            // Have to do lengthy to_remove.contains() because we cannot remove node half way through iterating the list
             if !to_remove.contains(&part[i]) && !to_remove.contains(&neighbor) {
                 // Match found!
                 to_remove.push(part[i]);

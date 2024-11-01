@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+</head>
+
+<body>
+    <div>
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+
+        <script src="https://cdn.plot.ly/plotly-2.12.1.min.js"></script>
+
+        <div id="plotly-html-element" class="plotly-graph-div" style="height:100%; width:100%;"></div>
+
+        <script type="module">
+            const graph_div = document.getElementById("plotly-html-element");
+            await Plotly.newPlot(graph_div, {"data":[{"type":"bar","x":["\u003e5000","\u003e2500","\u003e1250","\u003e625","\u003e312","\u003e156","\u003e78","\u003e39","\u003e19","\u003e9","\u003e4","\u003e2","\u003e1","0"],"y":[0,0,10000,0,0,0,0,0,0,0,0,0,0,0],"name":"Before","opacity":0.75},{"type":"bar","x":["\u003e5000","\u003e2500","\u003e1250","\u003e625","\u003e312","\u003e156","\u003e78","\u003e39","\u003e19","\u003e9","\u003e4","\u003e2","\u003e1","0"],"y":[0,0,0,0,0,0,0,222,21,0,0,0,0,9757],"name":"After","opacity":0.75}],"layout":{"title":{"text":"Title"},"xaxis":{"title":{"text":"Degrees"}},"yaxis":{"title":{"text":"Count"}},"barmode":"overlay","bargap":0.05,"bargroupgap":0.2},"config":{}});
+        </script>
+    </div>
+</body>
+
+</html>
