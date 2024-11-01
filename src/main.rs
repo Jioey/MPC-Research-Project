@@ -54,27 +54,27 @@ fn worker(part:Vec<usize>, worker_id:usize) -> Vec<usize>{
 
     let mut to_remove:Vec<usize> = Vec::new(); // List of nodes to remove
     let mut graph:Vec<Vec<usize>> = Vec::new();
-    let mut degrees:Vec<usize> = Vec::new();
+    // let mut degrees:Vec<usize> = Vec::new();
     // let mut degrees_heap: BinaryHeap<HeapNode> = BinaryHeap::new(); // 
 
     // Create adj list  
     for v1 in part.iter() {
         let mut node_list: Vec<usize> = Vec::new();
-        let mut degree = 0;
+        // let mut degree = 0;
         for v2 in part.iter() {
             if v1 != v2 && has_edge(*v1, *v2) {
                 node_list.push(*v2);
-                degree += 1;
+                // degree += 1;
             }
         }
         graph.push(node_list);
-        degrees.push(degree);
+        // degrees.push(degree);
         // degrees_heap.push(HeapNode{node:*v1, degree:degree});
     }
 
     print!("Graph:");
     for i in 0..graph.len() {
-        print!("{}: {}, ", part[i], degrees[i]);
+        print!("{}: {}, ", part[i], graph[i].len());
     }
     println!();
 
