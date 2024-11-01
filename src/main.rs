@@ -97,42 +97,50 @@ fn worker(part:Vec<usize>, worker_id:usize) -> Vec<usize>{
     return to_remove;
 }
 
+// Note: counts outbound edges
+fn count_degrees(removed:&Vec<usize>) -> Vec<usize> {
+    let mut degrees:Vec<usize> = vec![0;N_V];
+    for v1 in 0..N_V { // for every pair
+        for v2 in 0..N_V {
+            if v1 != v2 && has_edge(v1, v2) && !removed.contains(&v1) && !removed.contains(&v2){ // if edge exists and not removed
+                degrees[v1] += 1; // then increment count
+            }   
+        }
+    }
+
+    return degrees;
+}
+
 fn main() {
     println!("Starting with N={} workers and N_V={} verticies; seed = {}", N, N_V, SEED);
     let now = Instant::now();
     let mut partitions:Vec<Vec<usize>> = vec![Vec::new();N]; // creates 2d vector
     let mut removed:Vec<usize> = Vec::new();
 
-    // Assign nodes
+    // Assign nodes and count initial degrees
+    let mut degrees_init:Vec<usize> = vec![0;N_V];
     for node in 0..N_V {
         let machine = rand::thread_rng().gen_range(0..N);
         partitions[machine].push(node);
+
+        for v2 in 0..N_V {
+            if node != v2 && has_edge(node, v2) { // if edge exists 
+                degrees_init[node] += 1; // then increment count
+            }   
+        }
     }
+    println!("Initial Degrees: {:?}", degrees_init);
+    println!("Initial count & machine assigning complete. Time elapsed: {:.2?}. Now running algorithm...", now.elapsed());
 
     // Run workers
     for i in 0..N {
         // runs worker and adds to_remove (from worker) to removed (global)
         removed.append(&mut worker(partitions[i].clone(), i));
     }
-    let mut elapsed = now.elapsed();
-    println!("Algorithm complete. Time elapsed: {:.2?}. Now counting degrees...", elapsed);
+    println!("Algorithm complete. Time elapsed: {:.2?}. Now counting final degrees...", now.elapsed());
 
-    // Count degrees (both before and after)
-    let mut degrees_init:Vec<usize> = vec![0;N_V];
-    let mut degrees_after:Vec<usize> = vec![0;N_V];
-    for v1 in 0..N_V { // for every pair
-        for v2 in 0..N_V {
-            if v1 != v2 && has_edge(v1, v2) { // if edge exists
-                degrees_init[v1] += 1; // increment initial
-
-                if !removed.contains(&v1) && !removed.contains(&v2) { // if node not removed
-                    degrees_after[v1] += 1; // then also increment this
-                }
-            }   
-        }
-    }
-
-    println!("Initial Degrees: {:?}", degrees_init);
+    // Count degrees 
+    let degrees_after:Vec<usize> = count_degrees(&removed);
     println!("Ending Degrees: {:?}", degrees_after);
 
     // Graph!!
@@ -209,8 +217,7 @@ fn main() {
     plot.set_layout(layout);
     plot.add_trace(trace1);
     plot.add_trace(trace2);
-    plot.write_html("hist.html");
+    plot.write_html(FILE_NAME);
 
-    elapsed = now.elapsed();
-    println!("Program ended. Total time elapsed: {:.2?}.", elapsed);
+    println!("Program ended. Total time elapsed: {:.2?}.", now.elapsed());
 }
