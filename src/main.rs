@@ -1,27 +1,22 @@
+pub mod graph;
+
+use graph::StochasticGraph;
 use plotly::{common::Title, layout::{Axis, BarMode}, Bar, Layout, Plot};
-use rand::Rng;
+use rand::{rngs::SmallRng, seq::SliceRandom, Rng};
 use std::time::Instant;
 
 // Rust is Data Oriented?! (Contrary to OOP)
 const N:usize = 100; // Number of partitions
 const N_V:usize = N * N; // Number of Verticies
-const SEED:&str = "seed"; // Seed used in md5 hashing
-const FILE_NAME:&str = "graphs/renyi-10k-5.html";
+const SEED:&str = "seed"; // Seed used in md5 hashing and rng
+const FILE_NAME:&str = "graphs/temp.html";
 
-fn has_edge(v1:usize, v2:usize) -> bool {
-    // The input string you want to hash
-    let input = format!("{}{}{}", SEED, v1, v2);
-
-    // Generate MD5 hash
-    let hash = md5::compute(input);
-    
-    // Convert the MD5 hash (16-byte array) into a 128-bit integer
-    let hash_as_int = u128::from_be_bytes(hash.0);
-    
-    // Print the integer
-    // println!("MD5 hash as integer: {}", hash_as_int);
-    return hash_as_int % 5 == 0;
-}
+/** psudo code
+ * We have 10k nodes
+ * Partition to sqrt(N_V) groups, i.e. 100, each w rougly 100 nodes
+ * Assign edges between the groups:
+ *      
+ */
 
 fn worker(part:Vec<usize>, worker_id:usize) -> Vec<usize>{
     println!("[#WORKER {}#] Nodes: {}", worker_id, part.len());
@@ -30,17 +25,17 @@ fn worker(part:Vec<usize>, worker_id:usize) -> Vec<usize>{
     let mut graph:Vec<Vec<usize>> = Vec::new();
 
     // Create adj list  
-    for v1 in part.iter() {
-        let mut node_list: Vec<usize> = Vec::new();
-        // let mut degree = 0;
-        for v2 in part.iter() {
-            if v1 != v2 && has_edge(*v1, *v2) {
-                node_list.push(*v2);
-                // degree += 1;
-            }
-        }
-        graph.push(node_list);
-    }
+    // for v1 in part.iter() {
+    //     let mut node_list: Vec<usize> = Vec::new();
+    //     // let mut degree = 0;
+    //     for v2 in part.iter() {
+    //         if v1 != v2 && has_edge(*v1, *v2) {
+    //             node_list.push(*v2);
+    //             // degree += 1;
+    //         }
+    //     }
+    //     graph.push(node_list);
+    // }
 
     print!("Graph:");
     for i in 0..graph.len() {
@@ -67,51 +62,40 @@ fn worker(part:Vec<usize>, worker_id:usize) -> Vec<usize>{
     return to_remove;
 }
 
-// Note: counts outbound edges
-fn count_degrees(removed:&Vec<usize>) -> Vec<usize> {
-    let mut degrees:Vec<usize> = vec![0;N_V];
-    for v1 in 0..N_V { // for every pair
-        for v2 in 0..N_V {
-            if v1 != v2 && has_edge(v1, v2) && !removed.contains(&v1) && !removed.contains(&v2){ // if edge exists and not removed
-                degrees[v1] += 1; // then increment count
-            }   
-        }
-    }
-
-    return degrees;
-}
-
 fn main() {
-    println!("Starting with N={} workers and N_V={} verticies; seed = {}", N, N_V, SEED);
-    let now = Instant::now();
-    let mut partitions:Vec<Vec<usize>> = vec![Vec::new();N]; // creates 2d vector
-    let mut removed:Vec<usize> = Vec::new();
+    let mut g1 = StochasticGraph::new(N, SEED);
+    let degrees = g1.count_degrees(&Vec::new());
 
-    // Assign nodes and count initial degrees
-    let mut degrees_init:Vec<usize> = vec![0;N_V];
-    for node in 0..N_V {
-        let machine = rand::thread_rng().gen_range(0..N);
-        partitions[machine].push(node);
+    // println!("Starting with N={} workers and N_V={} verticies; seed = {}", N, N_V, SEED);
+    // let now = Instant::now();
+    // let mut partitions:Vec<Vec<usize>> = vec![Vec::new();N]; // creates 2d vector
+    // let mut removed:Vec<usize> = Vec::new();
 
-        for v2 in 0..N_V {
-            if node != v2 && has_edge(node, v2) { // if edge exists 
-                degrees_init[node] += 1; // then increment count
-            }   
-        }
-    }
-    println!("Initial Degrees: {:?}", degrees_init);
-    println!("Initial count & machine assigning complete. Time elapsed: {:.2?}. Now running algorithm...", now.elapsed());
+    // // Assign nodes and count initial degrees
+    // let mut degrees_init:Vec<usize> = vec![0;N_V];
+    // for node in 0..N_V {
+    //     let machine = rand::thread_rng().gen_range(0..N);
+    //     partitions[machine].push(node);
 
-    // Run workers
-    for i in 0..N {
-        // runs worker and adds to_remove (from worker) to removed (global)
-        removed.append(&mut worker(partitions[i].clone(), i));
-    }
-    println!("Algorithm complete. Time elapsed: {:.2?}. Now counting final degrees...", now.elapsed());
+    //     for v2 in 0..N_V {
+    //         if node != v2 && has_edge(node, v2) { // if edge exists 
+    //             degrees_init[node] += 1; // then increment count
+    //         }   
+    //     }
+    // }
+    // println!("Initial Degrees: {:?}", degrees_init);
+    // println!("Initial count & machine assigning complete. Time elapsed: {:.2?}. Now running algorithm...", now.elapsed());
 
-    // Count degrees 
-    let degrees_after:Vec<usize> = count_degrees(&removed);
-    println!("Ending Degrees: {:?}", degrees_after);
+    // // Run workers
+    // for i in 0..N {
+    //     // runs worker and adds to_remove (from worker) to removed (global)
+    //     removed.append(&mut worker(partitions[i].clone(), i));
+    // }
+    // println!("Algorithm complete. Time elapsed: {:.2?}. Now counting final degrees...", now.elapsed());
+
+    // // Count degrees 
+    // let degrees_after:Vec<usize> = count_degrees(&removed);
+    // println!("Ending Degrees: {:?}", degrees_after);
 
     // Graph!!
     // Manually count distributions
@@ -126,34 +110,35 @@ fn main() {
     println!("[#Analysis#] Counting distribution...");
     let bin_size = bins.len();
     let mut count_init:Vec<usize> = vec![0; bin_size+1];
-    let mut count_after:Vec<usize> = vec![0; bin_size+1];
+    // let mut count_after:Vec<usize> = vec![0; bin_size+1];
     for i in 0..N_V {
         // count initial by bins
-        if degrees_init[i] == 0 {
+        if degrees[i] == 0 {
             count_init[bin_size] += 1;
         } else {
             for j in 0..bin_size {
-                if degrees_init[i] > bins[j] {
+                if degrees[i] > bins[j] {
                     count_init[j] += 1;
-                    break;
-                }
-            }
-        }
-
-        // count resulting by bins (this feels so inefficient....)
-        if degrees_after[i] == 0 {
-            count_after[bin_size] += 1;
-        } else {
-            for j in 0..bin_size {
-                if degrees_after[i] > bins[j] {
-                    count_after[j] += 1;
                     break;
                 }
             }
         }
     }
 
-    println!("[#Analysis#] Graphing...");
+    //     // count resulting by bins (this feels so inefficient....)
+    //     if degrees_after[i] == 0 {
+    //         count_after[bin_size] += 1;
+    //     } else {
+    //         for j in 0..bin_size {
+    //             if degrees_after[i] > bins[j] {
+    //                 count_after[j] += 1;
+    //                 break;
+    //             }
+    //         }
+    //     }
+    // }
+
+    println!("[#Analysis#] Graphing to {}...", FILE_NAME);
     // convert bin numbers to axis ticks
     let mut bin_labels:Vec<String> = Vec::new();
     for b in bins {
@@ -168,10 +153,10 @@ fn main() {
         .name("Before")
         .opacity(0.75);
 
-    // adding resulting distribution
-    let trace2 = Bar::new(bin_labels.clone(), count_after)
-        .name("After")
-        .opacity(0.75);
+    // // adding resulting distribution
+    // let trace2 = Bar::new(bin_labels.clone(), count_after)
+    //     .name("After")
+    //     .opacity(0.75);
 
     // configuring layout
     let layout = Layout::new()
@@ -186,8 +171,8 @@ fn main() {
     let mut plot = Plot::new();
     plot.set_layout(layout);
     plot.add_trace(trace1);
-    plot.add_trace(trace2);
+    // plot.add_trace(trace2);
     plot.write_html(FILE_NAME);
 
-    println!("Program ended. Total time elapsed: {:.2?}.", now.elapsed());
+    // println!("Program ended. Total time elapsed: {:.2?}.", now.elapsed());
 }
