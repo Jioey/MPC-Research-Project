@@ -45,17 +45,30 @@ impl StochasticGraph {
     /// Values are randomly chosen from the supported probabilities using the seed
     /// Note: Only upper half (including diagonal) is populate for efficiency sake
     fn generate_prob_matrix(n:usize, seed:&str) -> Vec<Vec<f32>> {
-        let supported_probs: Vec<f32> = vec![0.1, 0.2, 0.25, 0.33, 0.5];
+        // Supported probabilities in prob_to_modded()
+        let supported_probs_low: Vec<f32> = vec![0.1, 0.2]; // other supported p: 0.25, 0.33
+        let supported_probs_high: Vec<f32> = vec![0.5, 1.0];
+        
+        let num_high_degree_groups = n / 3;
 
         // Generation
         let mut prob_matrix: Vec<Vec<f32>> = vec![vec![0.0; n]; n];
 
         let mut rng:SmallRng = Seeder::from(seed).make_rng();
         
-        for i in 0..n {
+        // Assign first 1/3 groups with high degree probabilities
+        for i in 0..num_high_degree_groups {
             for j in i..n {
-                let p = supported_probs.choose(&mut rng).unwrap();
+                let p = supported_probs_high.choose(&mut rng).unwrap();
                 prob_matrix[i][j] = *p; // only populating upper half (including diagonal)
+            }
+        }
+        
+        // Assign remaining nodes with low degree probabilities 
+        for i in num_high_degree_groups..n {
+            for j in i..n {
+                let p = supported_probs_low.choose(&mut rng).unwrap();
+                prob_matrix[i][j] = *p; 
             }
         }
 
@@ -75,6 +88,7 @@ impl StochasticGraph {
             0.25=>4,
             0.33=>3,
             0.5=>2,
+            1.0=>1,
             _=>{println!("[WARNING] Not supported probability p={}", p);return 0},
         }
     }
