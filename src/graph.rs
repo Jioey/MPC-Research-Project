@@ -6,7 +6,7 @@ pub struct StochasticGraph {
     n:usize,
     n_v:usize,
     seed:String,
-    prob_matrix:Vec<Vec<f32>>
+    prob_matrix:Vec<Vec<u128>>
 }
 
 // Implicit implementations:
@@ -45,7 +45,7 @@ impl StochasticGraph {
     /// Generates a n by n probability matrix, where n is the number of groups
     /// Values are randomly chosen from the supported probabilities using the seed
     /// Note: Only upper half (including diagonal) is populate for efficiency sake
-    fn generate_prob_matrix(n:usize, seed:&str) -> Vec<Vec<f32>> {
+    fn generate_prob_matrix(n:usize, seed:&str) -> Vec<Vec<u128>> {
         // Supported probabilities in prob_to_modded()
         // let supported_probs_low: Vec<f32> = vec![0.1, 0.2]; // other p supported: 0.25, 0.33
         // let supported_probs_high: Vec<f32> = vec![0.5, 1.0];
@@ -53,7 +53,7 @@ impl StochasticGraph {
         // let num_high_degree_groups = n / 3;
 
         // Generation
-        let mut prob_matrix: Vec<Vec<f32>> = vec![vec![0.0; n]; n];
+        let mut prob_matrix: Vec<Vec<u128>> = vec![vec![0; n]; n];
 
         // let mut rng:SmallRng = Seeder::from(seed).make_rng();
         
@@ -73,17 +73,19 @@ impl StochasticGraph {
         //     }
         // }
 
-        // Assign remaining nodes with low degree probabilities 
+        // Assign degree probabilities 
+        let log_n = (n as f64).log2() as u128;
+        println!("Log n = {}, where n is {}", log_n, n);
+        let log_range: Vec<u128> = (1..log_n+1).collect();
+        let mut k:usize = 0;
         for i in 0..n {
             for j in i..n {
-                prob_matrix[i][j] = 0.1; 
-            }
-        }
+                let p = log_range[k] * (2 as u128).pow(i as u32); // NOTE: p is not probability, it represents 1/p probability
+                prob_matrix[i][j] = p; // only populating upper half (including diagonal)
 
-        // Overwrites first few as high probabilities
-        let num_celebs: usize = n / 10;
-        for i in 0 ..num_celebs {
-            prob_matrix[0][i] = 0.5;
+                k += 1;
+                k = k % (log_n as usize);
+            }
         }
 
         prob_matrix
@@ -133,7 +135,7 @@ impl StochasticGraph {
             p = self.prob_matrix[g2][g1];
         }
         
-        return hash_as_int % Self::prob_to_modded(p) == 0;
+        return hash_as_int % (p as u128) == 0;
     }
 
     /// Counts the degrees of each node in the graph
@@ -151,8 +153,8 @@ impl StochasticGraph {
         degrees
     }
 
+    /// Graph!! Involves counting the distribution, then plotting it using the Plotly package
     pub fn graph(&mut self, degrees:Vec<usize>, file_name:&str) {
-        // Graph!!
         // Manually count distributions
         // create bins
         let mut bins:Vec<usize> = Vec::new();

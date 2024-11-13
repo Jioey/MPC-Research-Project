@@ -1,15 +1,8 @@
 pub mod graph;
 
 use graph::StochasticGraph;
-use plotly::{common::Title, layout::{Axis, BarMode}, Bar, Layout, Plot};
 use rand::{rngs::SmallRng, seq::SliceRandom, Rng};
 use std::time::Instant;
-
-// Rust is Data Oriented?! (Contrary to OOP)
-const N:usize = 100; // Number of partitions
-const N_V:usize = N * N; // Number of Verticies
-const SEED:&str = "seed"; // Seed used in md5 hashing and rng
-const FILE_NAME:&str = "graphs/temp.html";
 
 /** psudo code
  * We have 10k nodes
@@ -63,8 +56,15 @@ fn worker(part:Vec<usize>, worker_id:usize) -> Vec<usize>{
 }
 
 fn main() {
-    let mut g1 = StochasticGraph::new(N, SEED);
-    let degrees = g1.count_degrees(&Vec::new());
+    // Constants
+    const N:usize = 100; // Number of partitions
+    // const N_V:usize = N * N; // Number of Verticies
+    const SEED:&str = "seed"; // Seed used in md5 hashing and rng
+    const FILE_NAME:&str = "graphs/sto-log-n.html";
+
+    // Program starts here
+    let mut g1: StochasticGraph = StochasticGraph::new(N, SEED);
+    let degrees: Vec<usize> = g1.count_degrees(&Vec::new());
 
     // println!("Starting with N={} workers and N_V={} verticies; seed = {}", N, N_V, SEED);
     // let now = Instant::now();
@@ -97,82 +97,8 @@ fn main() {
     // let degrees_after:Vec<usize> = count_degrees(&removed);
     // println!("Ending Degrees: {:?}", degrees_after);
 
-    // Graph!!
-    // Manually count distributions
-    // create bins
-    let mut bins:Vec<usize> = Vec::new();
-    let mut bin:usize = N_V / 2;
-    while bin >= 1 {
-        bins.push(bin);
-        bin = bin / 2;
-    }
-    
-    println!("[#Analysis#] Counting distribution...");
-    let bin_size = bins.len();
-    let mut count_init:Vec<usize> = vec![0; bin_size+1];
-    // let mut count_after:Vec<usize> = vec![0; bin_size+1];
-    for i in 0..N_V {
-        // count initial by bins
-        if degrees[i] == 0 {
-            count_init[bin_size] += 1;
-        } else {
-            for j in 0..bin_size {
-                if degrees[i] > bins[j] {
-                    count_init[j] += 1;
-                    break;
-                }
-            }
-        }
-    }
-
-    //     // count resulting by bins (this feels so inefficient....)
-    //     if degrees_after[i] == 0 {
-    //         count_after[bin_size] += 1;
-    //     } else {
-    //         for j in 0..bin_size {
-    //             if degrees_after[i] > bins[j] {
-    //                 count_after[j] += 1;
-    //                 break;
-    //             }
-    //         }
-    //     }
-    // }
-
-    println!("[#Analysis#] Graphing to {}...", FILE_NAME);
-    // convert bin numbers to axis ticks
-    let mut bin_labels:Vec<String> = Vec::new();
-    for b in bins {
-        let mut l = ">".to_owned();
-        l.push_str(&b.to_string());
-        bin_labels.push(l);
-    }
-    bin_labels.push("0".to_owned());
-    println!("Bin labels: {:?}", bin_labels);
-    // adding initial distribution
-    let trace1 = Bar::new(bin_labels.clone(), count_init)
-        .name("Before")
-        .opacity(0.75);
-
-    // // adding resulting distribution
-    // let trace2 = Bar::new(bin_labels.clone(), count_after)
-    //     .name("After")
-    //     .opacity(0.75);
-
-    // configuring layout
-    let layout = Layout::new()
-        .title(Title::with_text("Title"))
-        .x_axis(Axis::new().title(Title::with_text("Degrees")))
-        .y_axis(Axis::new().title(Title::with_text("Count")))
-        .bar_mode(BarMode::Overlay)
-        .bar_gap(0.05)
-        .bar_group_gap(0.2);
-    
-    // plots graph (to html file, -> open in browser)
-    let mut plot = Plot::new();
-    plot.set_layout(layout);
-    plot.add_trace(trace1);
-    // plot.add_trace(trace2);
-    plot.write_html(FILE_NAME);
+    // Graph
+    g1.graph(degrees, FILE_NAME);
 
     // println!("Program ended. Total time elapsed: {:.2?}.", now.elapsed());
 }
